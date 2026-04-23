@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Suivi Heures — CROUS de Lille</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:#1F3864; --blue:#2E75B6; --light-blue:#EBF3FB;
+  --red:#C00000; --red-light:#FFE0E0;
+  --green:#375623; --green-light:#E2EFDA;
+  --yellow:#7F6000; --yellow-light:#FFF2CC;
+  --gray-50:#F8FAFC; --gray-100:#F1F5F9; --gray-200:#E2E8F0;
+  --gray-400:#94A3B8; --gray-600:#475569; --gray-800:#1E293B;
+  --radius:16px; --radius-sm:10px;
+  --shadow:0 4px 24px rgba(31,56,100,.10);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'DM Sans',sans-serif;background:var(--gray-50);color:var(--gray-800);min-height:100vh;}
+
+.header{background:linear-gradient(135deg,var(--navy) 0%,var(--blue) 100%);padding:20px 20px 16px;text-align:center;position:relative;overflow:hidden;}
+.header::before{content:'';position:absolute;top:-40px;right:-40px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);}
+.header-logo{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:4px;}
+.header-title{font-size:20px;font-weight:700;color:white;}
+.header-user{display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.15);border-radius:20px;padding:4px 12px;margin-top:8px;font-size:12px;color:white;font-weight:600;}
+
+.nav{background:white;display:flex;border-bottom:2px solid var(--gray-100);position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.nav-tab{flex:1;padding:10px 4px;text-align:center;font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;color:var(--gray-400);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.nav-tab .icon{font-size:17px;}
+.nav-tab.active{color:var(--navy);border-bottom-color:var(--blue);}
+
+.page{display:none;padding:16px 16px 80px;}
+.page.active{display:block;}
+
+/* LOGIN */
+.login-wrap{min-height:calc(100vh - 120px);display:flex;flex-direction:column;justify-content:center;padding:24px 16px;}
+.login-card{background:white;border-radius:var(--radius);padding:28px 24px;box-shadow:var(--shadow);}
+.login-icon{font-size:48px;text-align:center;margin-bottom:14px;}
+.login-title{font-size:20px;font-weight:700;color:var(--navy);text-align:center;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--gray-400);text-align:center;margin-bottom:22px;}
+
+/* SOLDE HERO */
+.solde-hero{background:linear-gradient(135deg,var(--navy),var(--blue));border-radius:var(--radius);padding:28px 20px;color:white;text-align:center;margin-bottom:16px;position:relative;overflow:hidden;}
+.solde-hero::before{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,.07);}
+.solde-hero::after{content:'';position:absolute;bottom:-20px;left:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05);}
+.solde-hero-label{font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;opacity:.7;margin-bottom:8px;}
+.solde-hero-val{font-family:'DM Mono',monospace;font-size:48px;font-weight:700;line-height:1;}
+.solde-hero-statut{font-size:14px;opacity:.85;margin-top:8px;font-weight:500;}
+.solde-hero.rouge{background:linear-gradient(135deg,#8B0000,var(--red));}
+.solde-hero.vert{background:linear-gradient(135deg,#1a3a0f,var(--green));}
+.solde-hero.neutre{background:linear-gradient(135deg,#4a3800,var(--yellow));}
+
+/* DETAIL SOLDE */
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+.detail-box{background:white;border-radius:var(--radius-sm);padding:16px;text-align:center;box-shadow:var(--shadow);}
+.detail-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:700;}
+.detail-lbl{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--gray-400);margin-top:4px;}
+.detail-prises .detail-val{color:var(--red);}
+.detail-recup  .detail-val{color:var(--green);}
+
+.card{background:white;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px;}
+.card-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--navy);margin-bottom:14px;}
+
+.form-group{margin-bottom:13px;}
+.form-label{display:block;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:var(--gray-600);margin-bottom:5px;}
+.form-control{width:100%;padding:12px 16px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;color:var(--gray-800);background:white;transition:border-color .2s;-webkit-appearance:none;appearance:none;}
+.form-control:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px rgba(46,117,182,.12);}
+select.form-control{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394A3B8' stroke-width='2' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:40px;}
+textarea.form-control{resize:vertical;min-height:80px;}
+
+.type-selector{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.type-btn{padding:16px 10px;border-radius:var(--radius-sm);border:2px solid var(--gray-200);background:white;text-align:center;cursor:pointer;transition:all .2s;font-family:'DM Sans',sans-serif;}
+.type-btn .type-icon{font-size:26px;display:block;margin-bottom:5px;}
+.type-btn .type-label{font-size:12px;font-weight:600;color:var(--gray-600);}
+.type-btn.sel-prises{border-color:var(--red);background:var(--red-light);}
+.type-btn.sel-prises .type-label{color:var(--red);}
+.type-btn.sel-sup{border-color:var(--green);background:var(--green-light);}
+.type-btn.sel-sup .type-label{color:var(--green);}
+
+.duration-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.btn{width:100%;padding:15px;border:none;border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:15px;font-weight:700;cursor:pointer;transition:all .2s;}
+.btn-primary{background:linear-gradient(135deg,var(--navy),var(--blue));color:white;box-shadow:0 4px 16px rgba(46,117,182,.35);}
+.btn-primary:active{transform:scale(.98);}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;}
+.btn-success{background:var(--green);color:white;}
+.btn-danger{background:var(--red);color:white;}
+.btn-sm{width:auto;padding:7px 14px;font-size:12px;border-radius:8px;}
+.btn-outline{background:white;border:2px solid var(--gray-200);color:var(--gray-600);font-size:13px;padding:10px;}
+
+.alert{padding:13px 16px;border-radius:var(--radius-sm);font-size:14px;font-weight:500;margin-bottom:14px;display:none;}
+.alert-success{background:var(--green-light);color:var(--green);border-left:4px solid var(--green);}
+.alert-error{background:var(--red-light);color:var(--red);border-left:4px solid var(--red);}
+.alert.show{display:block;animation:slideIn .3s ease;}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px);}to{opacity:1;transform:translateY(0);}}
+
+.demande-item{background:white;border-radius:var(--radius-sm);padding:13px;margin-bottom:10px;border-left:4px solid var(--gray-200);box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.demande-item.attente{border-left-color:var(--blue);}
+.demande-item.validee{border-left-color:var(--green);background:#FAFFF8;}
+.demande-item.refusee{border-left-color:var(--red);background:#FFF8F8;}
+.demande-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:7px;}
+.demande-nom{font-weight:700;font-size:14px;color:var(--navy);}
+.demande-service{font-size:11px;color:var(--gray-400);margin-top:1px;}
+.demande-statut{font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;}
+.s-attente{background:var(--light-blue);color:var(--blue);}
+.s-validee{background:var(--green-light);color:var(--green);}
+.s-refusee{background:var(--red-light);color:var(--red);}
+.demande-detail{font-size:13px;color:var(--gray-600);margin-bottom:3px;}
+.demande-detail strong{color:var(--gray-800);}
+.demande-obs{font-size:12px;color:var(--gray-600);font-style:italic;margin-top:7px;padding:8px 10px;background:var(--gray-50);border-radius:8px;border-left:3px solid var(--gray-200);}
+.demande-actions{display:flex;gap:8px;margin-top:10px;}
+
+.solde-item{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--gray-100);}
+.solde-item:last-child{border-bottom:none;}
+.solde-nom{font-weight:600;font-size:14px;}
+.solde-service{font-size:11px;color:var(--gray-400);}
+.solde-badge{font-family:'DM Mono',monospace;font-size:12px;font-weight:500;padding:4px 10px;border-radius:20px;}
+.b-neg{background:var(--red-light);color:var(--red);}
+.b-pos{background:var(--green-light);color:var(--green);}
+.b-eq{background:var(--yellow-light);color:var(--yellow);}
+
+.loader{display:flex;align-items:center;justify-content:center;padding:30px;color:var(--gray-400);font-size:14px;gap:10px;}
+.spinner{width:20px;height:20px;border:2px solid var(--gray-200);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;}
+.filter-btn{padding:6px 12px;border-radius:20px;border:2px solid var(--gray-200);background:white;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;color:var(--gray-600);cursor:pointer;transition:all .2s;}
+.filter-btn.active{border-color:var(--blue);background:var(--light-blue);color:var(--navy);}
+
+.empty{text-align:center;padding:40px 20px;color:var(--gray-400);}
+.empty-icon{font-size:40px;margin-bottom:10px;}
+.empty-text{font-size:14px;}
+
+.section-title{font-size:18px;font-weight:700;color:var(--navy);margin-bottom:4px;}
+.section-sub{font-size:13px;color:var(--gray-400);margin-bottom:16px;}
+
+.search-box{position:relative;margin-bottom:14px;}
+.search-box input{width:100%;padding:12px 16px 12px 42px;border:2px solid var(--gray-200);border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;font-size:14px;background:white;-webkit-appearance:none;}
+.search-box input:focus{outline:none;border-color:var(--blue);}
+.search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:16px;}
+
+.refresh-btn{display:flex;align-items:center;justify-content:center;gap:6px;background:var(--light-blue);color:var(--blue);border:none;border-radius:var(--radius-sm);padding:10px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;width:100%;margin-bottom:14px;}
+
+@media(min-width:480px){.page,.nav{max-width:480px;margin-left:auto;margin-right:auto;}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="header-logo">CROUS de Lille</div>
+  <div class="header-title">Suivi des Heures</div>
+  <div id="header-user" style="display:none">
+    <div class="header-user"><span>👤</span><span id="display-nom"></span></div>
+  </div>
+</div>
+
+<div class="nav" id="main-nav" style="display:none">
+  <div class="nav-tab active" onclick="showPage('accueil')" id="tab-accueil"><span class="icon">🏠</span>Accueil</div>
+  <div class="nav-tab" onclick="showPage('demande')" id="tab-demande"><span class="icon">📝</span>Demande</div>
+  <div class="nav-tab" onclick="showPage('mes-demandes')" id="tab-mes-demandes"><span class="icon">📋</span>Mes demandes</div>
+  <div class="nav-tab" onclick="showPage('mon-solde')" id="tab-mon-solde"><span class="icon">💰</span>Mon solde</div>
+  <div class="nav-tab" onclick="showPage('validation')" id="tab-validation" style="display:none"><span class="icon">✅</span>Validation</div>
+  <div class="nav-tab" onclick="showPage('tableau')" id="tab-tableau" style="display:none"><span class="icon">📊</span>Tableau</div>
+</div>
+
+<!-- ════ LOGIN ════ -->
+<div id="page-login">
+  <div class="login-wrap">
+    <div class="login-card">
+      <div class="login-icon">👋</div>
+      <div class="login-title">Bienvenue</div>
+      <div class="login-sub">Identifiez-vous pour accéder à l'application</div>
+      <div id="alert-login" class="alert"></div>
+      <div class="form-group">
+        <label class="form-label">Votre nom complet</label>
+        <input type="text" id="login-nom" class="form-control" placeholder="Ex : Dupont Marie">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Votre service</label>
+        <select id="login-service" class="form-control">
+          <option value="">— Sélectionnez —</option>
+          <option>UCA Production</option><option>UCA Approvisionnement</option>
+          <option>IAE LEA</option><option>SUP SUAIO</option><option>La Boutique</option>
+          <option>Le 3,14</option><option>Basoche</option><option>IEP</option>
+          <option>IUT B</option><option>Le Comptoir</option><option>TFL</option>
+          <option>Crous gourmand</option><option>Flores</option><option>MDE</option>
+          <option>Sandwicherie</option><option>Kiosk</option><option>SN1</option><option>IAE</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Vous êtes</label>
+        <select id="login-role" class="form-control">
+          <option value="agent">Agent</option>
+          <option value="responsable">Responsable / Gestionnaire</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" onclick="seConnecter()">🚀 Accéder à l'application</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════ ACCUEIL ════ -->
+<div class="page" id="page-accueil">
+  <div class="section-title" id="accueil-titre">Bonjour 👋</div>
+  <div class="section-sub">Votre tableau de bord</div>
+  <div id="accueil-solde"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px">
+    <div class="card" style="cursor:pointer;text-align:center;margin-bottom:0" onclick="showPage('demande')">
+      <div style="font-size:28px;margin-bottom:6px">📝</div>
+      <div style="font-weight:700;color:var(--navy);font-size:13px">Nouvelle demande</div>
+      <div style="font-size:11px;color:var(--gray-400);margin-top:2px">Heures prises ou sup</div>
+    </div>
+    <div class="card" style="cursor:pointer;text-align:center;margin-bottom:0" onclick="showPage('mon-solde')">
+      <div style="font-size:28px;margin-bottom:6px">💰</div>
+      <div style="font-weight:700;color:var(--navy);font-size:13px">Mon solde</div>
+      <div style="font-size:11px;color:var(--gray-400);margin-top:2px">Détail & historique</div>
+    </div>
+  </div>
+  <div id="accueil-recentes" class="card">
+    <div class="card-title">🕐 Dernières demandes</div>
+    <div class="loader"><div class="spinner"></div>Chargement...</div>
+  </div>
+  <button class="btn btn-outline" onclick="seDeconnecter()">🚪 Changer d'utilisateur</button>
+</div>
+
+<!-- ════ DEMANDE ════ -->
+<div class="page" id="page-demande">
+  <div class="section-title">Nouvelle demande</div>
+  <div class="section-sub">Remplissez le formulaire</div>
+  <div id="alert-demande" class="alert"></div>
+  <div class="card">
+    <div class="card-title">📋 Type de demande</div>
+    <div class="type-selector">
+      <div class="type-btn" id="btn-prises" onclick="selectType('prises')">
+        <span class="type-icon">⏸️</span><span class="type-label">Heures prises</span>
+      </div>
+      <div class="type-btn" id="btn-sup" onclick="selectType('sup')">
+        <span class="type-icon">⚡</span><span class="type-label">Heures sup</span>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="card-prises" style="display:none">
+    <div class="card-title">⏸️ Heures prises</div>
+    <div class="form-group">
+      <label class="form-label">Date de début</label>
+      <input type="date" id="f-date-debut" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Date de fin</label>
+      <input type="date" id="f-date-fin" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Durée</label>
+      <div class="duration-grid">
+        <input type="number" id="f-heures-p" class="form-control" placeholder="Heures" min="0" max="99">
+        <select id="f-minutes-p" class="form-control">
+          <option value="00">00 min</option><option value="15">15 min</option>
+          <option value="30">30 min</option><option value="45">45 min</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card" id="card-sup" style="display:none">
+    <div class="card-title">⚡ Heures supplémentaires</div>
+    <div class="form-group">
+      <label class="form-label">Date effectuée</label>
+      <input type="date" id="f-date-sup" class="form-control">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Durée</label>
+      <div class="duration-grid">
+        <input type="number" id="f-heures-s" class="form-control" placeholder="Heures" min="0" max="99">
+        <select id="f-minutes-s" class="form-control">
+          <option value="00">00 min</option><option value="15">15 min</option>
+          <option value="30">30 min</option><option value="45">45 min</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">💬 Observations</div>
+    <textarea id="f-obs" class="form-control" rows="3" placeholder="Motif, précisions, contexte..."></textarea>
+  </div>
+  <button class="btn btn-primary" onclick="envoyerDemande()" id="btn-envoyer">📤 Envoyer la demande</button>
+</div>
+
+<!-- ════ MES DEMANDES ════ -->
+<div class="page" id="page-mes-demandes">
+  <div class="section-title">Mes demandes</div>
+  <div class="section-sub">Historique de vos demandes</div>
+  <button class="refresh-btn" onclick="chargerMesDemandes()">🔄 Actualiser</button>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilterMes('all',this)">📋 Toutes</button>
+    <button class="filter-btn" onclick="setFilterMes('attente',this)">⏳ En attente</button>
+    <button class="filter-btn" onclick="setFilterMes('validee',this)">✅ Validées</button>
+    <button class="filter-btn" onclick="setFilterMes('refusee',this)">❌ Refusées</button>
+  </div>
+  <div id="liste-mes-demandes"><div class="loader"><div class="spinner"></div>Chargement...</div></div>
+</div>
+
+<!-- ════ MON SOLDE ════ -->
+<div class="page" id="page-mon-solde">
+  <div class="section-title">Mon solde</div>
+  <div class="section-sub">Bilan de vos heures</div>
+  <button class="refresh-btn" onclick="chargerMonSolde()">🔄 Actualiser</button>
+  <div id="mon-solde-hero"><div class="loader"><div class="spinner"></div>Chargement...</div></div>
+  <div id="mon-solde-detail"></div>
+  <div id="mon-solde-historique"></div>
+</div>
+
+<!-- ════ VALIDATION ════ -->
+<div class="page" id="page-validation">
+  <div class="section-title">Validation</div>
+  <div class="section-sub">Demandes à traiter</div>
+  <div class="card">
+    <div class="card-title">🔍 Filtrer par service</div>
+    <select id="v-service" class="form-control" onchange="chargerValidation()">
+      <option value="">— Tous les services —</option>
+      <option>UCA Production</option><option>UCA Approvisionnement</option>
+      <option>IAE LEA</option><option>SUP SUAIO</option><option>La Boutique</option>
+      <option>Le 3,14</option><option>Basoche</option><option>IEP</option>
+      <option>IUT B</option><option>Le Comptoir</option><option>TFL</option>
+      <option>Crous gourmand</option><option>Flores</option><option>MDE</option>
+      <option>Sandwicherie</option><option>Kiosk</option><option>SN1</option><option>IAE</option>
+    </select>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilter('attente',this)">⏳ En attente</button>
+    <button class="filter-btn" onclick="setFilter('all',this)">📋 Toutes</button>
+    <button class="filter-btn" onclick="setFilter('validee',this)">✅ Validées</button>
+    <button class="filter-btn" onclick="setFilter('refusee',this)">❌ Refusées</button>
+  </div>
+  <div id="alert-validation" class="alert"></div>
+  <div id="liste-validation"><div class="loader"><div class="spinner"></div>Chargement...</div></div>
+</div>
+
+<!-- ════ TABLEAU ════ -->
+<div class="page" id="page-tableau">
+  <div class="section-title">Tableau de bord</div>
+  <div class="section-sub">Soldes de tous les agents</div>
+  <div class="search-box">
+    <span class="search-icon">🔍</span>
+    <input type="text" id="search-agent" placeholder="Rechercher un agent..." oninput="filtrerSoldes()">
+  </div>
+  <div class="filter-bar">
+    <button class="filter-btn active" onclick="setFilterSolde('all',this)">Tous</button>
+    <button class="filter-btn" onclick="setFilterSolde('neg',this)">⚠️ À rendre</button>
+    <button class="filter-btn" onclick="setFilterSolde('pos',this)">✅ À récupérer</button>
+    <button class="filter-btn" onclick="setFilterSolde('eq',this)">✓ Équilibrés</button>
+  </div>
+  <div class="card">
+    <div id="liste-soldes"><div class="loader"><div class="spinner"></div>Chargement...</div></div>
+  </div>
+</div>
+
+<script>
+const API = "https://script.google.com/macros/s/AKfycbwdfF23fqzRh1qWGk4gKUWhsCp2ObsjUlysbVHYfn2iIpLGe3AvqGud4uJU2neFxvvb/exec";
+let currentUser = null;
+let currentType = null;
+let allDemandes = [], allSoldes = [], mesDemandes = [];
+let filterStatut = 'attente', filterSolde = 'all', filterMes = 'all';
+
+function minsToHhmm(m) {
+  if (isNaN(m)) return '0:00';
+  const sign=m<0?'-':''; const a=Math.abs(m);
+  return `${sign}${Math.floor(a/60)}:${String(a%60).padStart(2,'0')}`;
+}
+
+// ── CONNEXION ──
+function seConnecter() {
+  const nom     = document.getElementById('login-nom').value.trim();
+  const service = document.getElementById('login-service').value;
+  const role    = document.getElementById('login-role').value;
+  if (!nom)     { showAlert('alert-login','error','⚠️ Veuillez saisir votre nom.'); return; }
+  if (!service) { showAlert('alert-login','error','⚠️ Veuillez sélectionner votre service.'); return; }
+  currentUser = {nom, service, role};
+  localStorage.setItem('crous_user', JSON.stringify(currentUser));
+  afficherApp();
+}
+
+function seDeconnecter() {
+  currentUser = null;
+  localStorage.removeItem('crous_user');
+  document.getElementById('page-login').style.display = 'block';
+  document.getElementById('main-nav').style.display = 'none';
+  document.getElementById('header-user').style.display = 'none';
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+}
+
+function afficherApp() {
+  document.getElementById('page-login').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'flex';
+  document.getElementById('header-user').style.display = 'block';
+  document.getElementById('display-nom').textContent = currentUser.nom;
+  if (currentUser.role === 'responsable') {
+    document.getElementById('tab-validation').style.display = 'flex';
+    document.getElementById('tab-tableau').style.display = 'flex';
+  }
+  showPage('accueil');
+}
+
+// ── NAVIGATION ──
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  const page = document.getElementById('page-'+id);
+  const tab  = document.getElementById('tab-'+id);
+  if (page) page.classList.add('active');
+  if (tab)  tab.classList.add('active');
+  if (id==='accueil')       chargerAccueil();
+  if (id==='mes-demandes')  chargerMesDemandes();
+  if (id==='mon-solde')     chargerMonSolde();
+  if (id==='validation')    chargerValidation();
+  if (id==='tableau')       chargerSoldes();
+}
+
+// ── API ──
+async function apiCall(params) {
+  try {
+    const r = await fetch(API+'?'+new URLSearchParams(params).toString());
+    return await r.json();
+  } catch(e) { return {ok:false, msg:"Erreur de connexion"}; }
+}
+async function apiPost(data) {
+  try {
+    const r = await fetch(API, {method:'POST', body:JSON.stringify(data)});
+    return await r.json();
+  } catch(e) { return {ok:false, msg:"Erreur de connexion"}; }
+}
+
+// ── ACCUEIL ──
+async function chargerAccueil() {
+  if (!currentUser) return;
+  document.getElementById('accueil-titre').textContent = `Bonjour, ${currentUser.nom.split(' ')[0]} 👋`;
+
+  // Mini solde sur accueil
+  const rs = await apiCall({action:'get_soldes'});
+  if (rs.ok) {
+    const ms = (rs.soldes||[]).find(s => s.nom === currentUser.nom);
+    if (ms) {
+      const solde = parseInt(ms.solde)||0;
+      const cls   = solde<0?'rouge':solde>0?'vert':'neutre';
+      const icon  = solde<0?'⚠️':solde>0?'✅':'✓';
+      const label = solde<0?'Heures à rendre':solde>0?'Heures à récupérer':'Solde équilibré';
+      document.getElementById('accueil-solde').innerHTML = `
+        <div class="solde-hero ${cls}" style="padding:18px 20px;margin-bottom:14px" onclick="showPage('mon-solde')" >
+          <div class="solde-hero-label">Mon solde — appuyez pour le détail</div>
+          <div class="solde-hero-val">${icon} ${minsToHhmm(solde)}</div>
+          <div class="solde-hero-statut">${label}</div>
+        </div>`;
+    }
+  }
+
+  // Dernières demandes de l'agent
+  const res = await apiCall({action:'get_demandes', nom: currentUser.nom});
+  const d = res.ok ? (res.demandes||[]).slice(-3).reverse() : [];
+  const wrap = document.getElementById('accueil-recentes');
+  if (!d.length) {
+    wrap.innerHTML = '<div class="card-title">🕐 Dernières demandes</div><div class="empty" style="padding:20px"><div class="empty-icon">📭</div><div class="empty-text">Aucune demande pour l\'instant</div></div>';
+    return;
+  }
+  wrap.innerHTML = '<div class="card-title">🕐 Dernières demandes</div>' + d.map(renderSmall).join('');
+}
+
+function renderSmall(d) {
+  const cls = d.statut==='En attente'?'attente':d.statut&&d.statut.includes('Valid')?'validee':'refusee';
+  const sc  = d.statut==='En attente'?'s-attente':d.statut&&d.statut.includes('Valid')?'s-validee':'s-refusee';
+  return `<div class="demande-item ${cls}">
+    <div class="demande-header">
+      <div><div class="demande-nom">${d.type==='Heures prises'?'⏸️':'⚡'} ${d.type}</div>
+      <div class="demande-service">📅 ${d.date_debut||''}</div></div>
+      <span class="demande-statut ${sc}">${d.statut||'En attente'}</span>
+    </div>
+    <div class="demande-detail">⏱️ <strong>${d.duree}</strong></div>
+    ${d.observations?`<div class="demande-obs">💬 ${d.observations}</div>`:''}
+  </div>`;
+}
+
+// ── TYPE ──
+function selectType(type) {
+  currentType = type;
+  document.getElementById('btn-prises').className = 'type-btn'+(type==='prises'?' sel-prises':'');
+  document.getElementById('btn-sup').className    = 'type-btn'+(type==='sup'?' sel-sup':'');
+  document.getElementById('card-prises').style.display = type==='prises'?'block':'none';
+  document.getElementById('card-sup').style.display    = type==='sup'?'block':'none';
+}
+
+// ── ENVOYER ──
+async function envoyerDemande() {
+  if (!currentUser || !currentType) { showAlert('alert-demande','error','⚠️ Veuillez choisir un type de demande.'); return; }
+  let duree, date_debut, date_fin;
+  if (currentType==='prises') {
+    date_debut = document.getElementById('f-date-debut').value;
+    date_fin   = document.getElementById('f-date-fin').value;
+    const h = parseInt(document.getElementById('f-heures-p').value)||0;
+    const m = document.getElementById('f-minutes-p').value;
+    if (!date_debut) { showAlert('alert-demande','error','⚠️ Veuillez saisir une date de début.'); return; }
+    if (h===0 && m==='00') { showAlert('alert-demande','error','⚠️ Veuillez saisir une durée.'); return; }
+    duree = `${h}:${m}`;
+  } else {
+    date_debut = document.getElementById('f-date-sup').value;
+    const h = parseInt(document.getElementById('f-heures-s').value)||0;
+    const m = document.getElementById('f-minutes-s').value;
+    if (!date_debut) { showAlert('alert-demande','error','⚠️ Veuillez saisir une date.'); return; }
+    if (h===0 && m==='00') { showAlert('alert-demande','error','⚠️ Veuillez saisir une durée.'); return; }
+    duree = `${h}:${m}`; date_fin = date_debut;
+  }
+  const obs = document.getElementById('f-obs').value.trim();
+  const btn = document.getElementById('btn-envoyer');
+  btn.disabled=true; btn.textContent='⏳ Envoi en cours...';
+  const res = await apiPost({action:'nouvelle_demande', nom:currentUser.nom, service:currentUser.service, obs,
+    type:currentType==='prises'?'Heures prises':'Heures supplémentaires', duree, date_debut, date_fin:date_fin||date_debut});
+  btn.disabled=false; btn.textContent='📤 Envoyer la demande';
+  if (res.ok) {
+    showAlert('alert-demande','success','✅ Demande envoyée ! Réf : '+res.id);
+    ['f-obs','f-heures-p','f-heures-s','f-date-debut','f-date-fin','f-date-sup'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+    selectType(null); currentType=null;
+    document.getElementById('btn-prises').className='type-btn';
+    document.getElementById('btn-sup').className='type-btn';
+  } else { showAlert('alert-demande','error','❌ '+(res.msg||'Réessayez.')); }
+}
+
+// ── MES DEMANDES ──
+async function chargerMesDemandes() {
+  document.getElementById('liste-mes-demandes').innerHTML='<div class="loader"><div class="spinner"></div>Chargement...</div>';
+  const res = await apiCall({action:'get_demandes', nom:currentUser.nom});
+  if (!res.ok) { document.getElementById('liste-mes-demandes').innerHTML='<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Erreur de chargement</div></div>'; return; }
+  mesDemandes = res.demandes||[];
+  renderMesDemandes();
+}
+
+function setFilterMes(f,el) {
+  filterMes=f;
+  document.querySelectorAll('#page-mes-demandes .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderMesDemandes();
+}
+
+function renderMesDemandes() {
+  let list=[...mesDemandes];
+  if (filterMes==='attente') list=list.filter(d=>d.statut==='En attente');
+  else if (filterMes==='validee') list=list.filter(d=>d.statut&&d.statut.includes('Valid'));
+  else if (filterMes==='refusee') list=list.filter(d=>d.statut&&d.statut.includes('Refus'));
+  list.reverse();
+  if (!list.length) { document.getElementById('liste-mes-demandes').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucune demande</div></div>'; return; }
+  document.getElementById('liste-mes-demandes').innerHTML = list.map(d => {
+    const cls=d.statut==='En attente'?'attente':d.statut&&d.statut.includes('Valid')?'validee':'refusee';
+    const sc =d.statut==='En attente'?'s-attente':d.statut&&d.statut.includes('Valid')?'s-validee':'s-refusee';
+    return `<div class="demande-item ${cls}">
+      <div class="demande-header">
+        <div><div class="demande-nom">${d.type==='Heures prises'?'⏸️':'⚡'} ${d.type}</div>
+        <div class="demande-service">📅 ${d.date_debut||''}${d.date_fin&&d.date_fin!==d.date_debut?' → '+d.date_fin:''}</div></div>
+        <span class="demande-statut ${sc}">${d.statut||'En attente'}</span>
+      </div>
+      <div class="demande-detail">⏱️ Durée : <strong>${d.duree}</strong></div>
+      ${d.observations?`<div class="demande-obs">💬 ${d.observations}</div>`:''}
+      <div class="demande-detail" style="color:var(--gray-400);font-size:11px;margin-top:5px">🕐 Soumis le ${d.horodateur}</div>
+    </div>`;
+  }).join('');
+}
+
+// ── MON SOLDE ──
+async function chargerMonSolde() {
+  document.getElementById('mon-solde-hero').innerHTML='<div class="loader"><div class="spinner"></div>Chargement...</div>';
+  document.getElementById('mon-solde-detail').innerHTML='';
+  document.getElementById('mon-solde-historique').innerHTML='';
+
+  const [rs, rd] = await Promise.all([
+    apiCall({action:'get_soldes'}),
+    apiCall({action:'get_demandes', nom:currentUser.nom})
+  ]);
+
+  // Hero solde
+  if (rs.ok) {
+    const ms = (rs.soldes||[]).find(s => s.nom === currentUser.nom);
+    const prises = ms ? parseInt(ms.prises)||0 : 0;
+    const recup  = ms ? parseInt(ms.recuperees)||0 : 0;
+    const solde  = ms ? parseInt(ms.solde)||0 : 0;
+    const cls    = solde<0?'rouge':solde>0?'vert':'neutre';
+    const icon   = solde<0?'⚠️':solde>0?'✅':'✓';
+    const label  = solde<0?'Heures à rendre':solde>0?'Heures à récupérer':'Solde équilibré';
+
+    document.getElementById('mon-solde-hero').innerHTML = `
+      <div class="solde-hero ${cls}">
+        <div class="solde-hero-label">Solde actuel</div>
+        <div class="solde-hero-val">${icon} ${minsToHhmm(solde)}</div>
+        <div class="solde-hero-statut">${label}</div>
+      </div>`;
+
+    document.getElementById('mon-solde-detail').innerHTML = `
+      <div class="detail-grid">
+        <div class="detail-box detail-prises">
+          <div class="detail-val">⏸️ ${minsToHhmm(prises)}</div>
+          <div class="detail-lbl">Heures prises</div>
+        </div>
+        <div class="detail-box detail-recup">
+          <div class="detail-val">⚡ ${minsToHhmm(recup)}</div>
+          <div class="detail-lbl">Heures récupérées</div>
+        </div>
+      </div>`;
+  }
+
+  // Historique des demandes validées
+  if (rd.ok) {
+    const validees = (rd.demandes||[]).filter(d=>d.statut&&d.statut.includes('Valid')).reverse();
+    if (validees.length) {
+      document.getElementById('mon-solde-historique').innerHTML = `
+        <div class="card">
+          <div class="card-title">✅ Demandes validées (${validees.length})</div>
+          ${validees.map(d=>`
+            <div style="padding:10px 0;border-bottom:1px solid var(--gray-100)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-weight:600;font-size:13px">${d.type==='Heures prises'?'⏸️':'⚡'} ${d.type}</div>
+                  <div style="font-size:11px;color:var(--gray-400)">📅 ${d.date_debut||''} — 🕐 ${d.horodateur}</div>
+                  ${d.observations?`<div style="font-size:11px;color:var(--gray-600);font-style:italic;margin-top:3px">💬 ${d.observations}</div>`:''}
+                </div>
+                <span style="font-family:'DM Mono',monospace;font-size:13px;font-weight:600;color:${d.type==='Heures prises'?'var(--red)':'var(--green)'}">${d.duree}</span>
+              </div>
+            </div>`).join('')}
+        </div>`;
+    }
+  }
+}
+
+// ── VALIDATION ──
+async function chargerValidation() {
+  document.getElementById('liste-validation').innerHTML='<div class="loader"><div class="spinner"></div>Chargement...</div>';
+  const service=document.getElementById('v-service').value;
+  const params={action:'get_demandes'};
+  if(service) params.service=service;
+  const res=await apiCall(params);
+  if(!res.ok){document.getElementById('liste-validation').innerHTML='<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Erreur</div></div>';return;}
+  allDemandes=res.demandes||[];
+  renderValidation();
+}
+
+function setFilter(f,el){
+  filterStatut=f;
+  document.querySelectorAll('#page-validation .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderValidation();
+}
+
+function renderValidation() {
+  let list=[...allDemandes];
+  if(filterStatut==='attente') list=list.filter(d=>d.statut==='En attente');
+  else if(filterStatut==='validee') list=list.filter(d=>d.statut&&d.statut.includes('Valid'));
+  else if(filterStatut==='refusee') list=list.filter(d=>d.statut&&d.statut.includes('Refus'));
+  list.reverse();
+  if(!list.length){document.getElementById('liste-validation').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucune demande</div></div>';return;}
+  document.getElementById('liste-validation').innerHTML=list.map(d=>{
+    const cls=d.statut==='En attente'?'attente':d.statut&&d.statut.includes('Valid')?'validee':'refusee';
+    const sc =d.statut==='En attente'?'s-attente':d.statut&&d.statut.includes('Valid')?'s-validee':'s-refusee';
+    const actions=d.statut==='En attente'?`<div class="demande-actions">
+      <button class="btn btn-success btn-sm" onclick="valider('${d.id}')">✅ Valider</button>
+      <button class="btn btn-danger btn-sm" onclick="refuser('${d.id}')">❌ Refuser</button>
+    </div>`:'';
+    return `<div class="demande-item ${cls}">
+      <div class="demande-header">
+        <div><div class="demande-nom">${d.nom}</div><div class="demande-service">${d.service}</div></div>
+        <span class="demande-statut ${sc}">${d.statut||'En attente'}</span>
+      </div>
+      <div class="demande-detail">${d.type==='Heures prises'?'⏸️':'⚡'} <strong>${d.type}</strong> — ⏱️ <strong>${d.duree}</strong></div>
+      <div class="demande-detail">📅 ${d.date_debut||''}${d.date_fin&&d.date_fin!==d.date_debut?' → '+d.date_fin:''}</div>
+      ${d.observations?`<div class="demande-obs">💬 ${d.observations}</div>`:''}
+      <div class="demande-detail" style="color:var(--gray-400);font-size:11px;margin-top:4px">🕐 ${d.horodateur}</div>
+      ${actions}
+    </div>`;
+  }).join('');
+}
+
+async function valider(id){
+  const res=await apiPost({action:'valider',id});
+  if(res.ok){showAlert('alert-validation','success','✅ Demande validée !');chargerValidation();}
+  else showAlert('alert-validation','error','❌ '+res.msg);
+}
+async function refuser(id){
+  const res=await apiPost({action:'refuser',id});
+  if(res.ok){showAlert('alert-validation','error','Demande refusée.');chargerValidation();}
+  else showAlert('alert-validation','error','❌ '+res.msg);
+}
+
+// ── TABLEAU ──
+async function chargerSoldes(){
+  document.getElementById('liste-soldes').innerHTML='<div class="loader"><div class="spinner"></div>Chargement...</div>';
+  const res=await apiCall({action:'get_soldes'});
+  if(!res.ok){document.getElementById('liste-soldes').innerHTML='<div class="empty"><div class="empty-icon">❌</div><div class="empty-text">Erreur</div></div>';return;}
+  allSoldes=res.soldes||[];
+  renderSoldes();
+}
+
+function setFilterSolde(f,el){
+  filterSolde=f;
+  document.querySelectorAll('#page-tableau .filter-btn').forEach(b=>b.classList.remove('active'));
+  el.classList.add('active');
+  renderSoldes();
+}
+function filtrerSoldes(){renderSoldes();}
+
+function renderSoldes(){
+  const search=(document.getElementById('search-agent').value||'').toLowerCase();
+  let list=[...allSoldes];
+  if(filterSolde==='neg') list=list.filter(s=>parseInt(s.solde)<0);
+  else if(filterSolde==='pos') list=list.filter(s=>parseInt(s.solde)>0);
+  else if(filterSolde==='eq') list=list.filter(s=>parseInt(s.solde)===0);
+  if(search) list=list.filter(s=>s.nom.toLowerCase().includes(search)||s.service.toLowerCase().includes(search));
+  if(!list.length){document.getElementById('liste-soldes').innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-text">Aucun résultat</div></div>';return;}
+  list.sort((a,b)=>a.nom.localeCompare(b.nom));
+  document.getElementById('liste-soldes').innerHTML=list.map(s=>{
+    const solde=parseInt(s.solde)||0;
+    const cls=solde<0?'b-neg':solde>0?'b-pos':'b-eq';
+    const icon=solde<0?'⚠️':solde>0?'✅':'✓';
+    return `<div class="solde-item">
+      <div><div class="solde-nom">${s.nom}</div><div class="solde-service">${s.service}</div></div>
+      <span class="solde-badge ${cls}">${icon} ${minsToHhmm(solde)}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── ALERTS ──
+function showAlert(id,type,msg){
+  const el=document.getElementById(id);
+  if(!el)return;
+  el.className=`alert alert-${type} show`;
+  el.textContent=msg;
+  setTimeout(()=>el.classList.remove('show'),5000);
+}
+
+// ── INIT ──
+const saved=localStorage.getItem('crous_user');
+if(saved){try{currentUser=JSON.parse(saved);afficherApp();}catch(e){document.getElementById('page-login').style.display='block';}}
+else{document.getElementById('page-login').style.display='block';}
+</script>
+</body>
+</html>
